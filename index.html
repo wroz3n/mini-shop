@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Мини-магазин</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 720px; margin: 2rem auto; padding: 0 1rem; }
+    h1 { margin-bottom: .2rem; } .muted { color: #666; }
+    ul { list-style: none; padding: 0; } li { padding: .5rem 0; border-bottom: 1px solid #eee; }
+    input, button { padding: .5rem; margin: .25rem 0; } button { cursor: pointer; }
+    section { margin-top: 2rem; } #result, #auth-result { white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>Мини-магазин</h1>
+  <p class="muted">Каталог, корзина и оформление заказа — демо для проверки API.</p>
+
+  <section>
+    <h2>Товары</h2>
+    <ul id="products"><li>Загрузка…</li></ul>
+  </section>
+
+  <section>
+    <h2>Оформить заказ</h2>
+    <label>ID пользователя <input id="user-id" type="number" min="1" value="1"></label><br>
+    <label>ID товара <input id="product-id" type="number" min="1" value="1"></label>
+    <label>Количество <input id="quantity" type="number" min="1" value="1"></label><br>
+    <label>Промокод <input id="promo" placeholder="SALE10 — скидка 10%"></label><br>
+    <button id="order-btn">Оформить заказ</button>
+    <p id="result"></p>
+  </section>
+
+  <section>
+    <h2>Регистрация / вход</h2>
+    <label>Логин <input id="username" placeholder="user_1"></label><br>
+    <label>Пароль <input id="password" type="password" placeholder="минимум 6 символов и цифра"></label><br>
+    <button id="register-btn">Зарегистрироваться</button>
+    <button id="login-btn">Войти</button>
+    <p id="auth-result"></p>
+  </section>
+
+  <script>
+    async function loadProducts() {
+      const res = await fetch('/api/products');
+      const products = await res.json();
+      document.getElementById('products').innerHTML = products
+        .map(p => `<li>${p.id}. ${p.name} — ${p.price} ₽ (остаток: ${p.stock})</li>`)
+        .join('');
+    }
+    async function post(url, body, out) {
+      const res = await fetch(url, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) });
+      const data = await res.json();
+      document.getElementById(out).textContent = res.ok ? JSON.stringify(data) : 'Ошибка: ' + (data.error || res.status);
+    }
+    document.getElementById('order-btn').onclick = () => post('/api/orders', {
+      user_id: Number(document.getElementById('user-id').value),
+      items: [{ product_id: Number(document.getElementById('product-id').value), quantity: Number(document.getElementById('quantity').value) }],
+      promo: document.getElementById('promo').value || null
+    }, 'result');
+    document.getElementById('register-btn').onclick = () => post('/api/register', {
+      username: document.getElementById('username').value,
+      password: document.getElementById('password').value
+    }, 'auth-result');
+    document.getElementById('login-btn').onclick = () => post('/api/login', {
+      username: document.getElementById('username').value,
+      password: document.getElementById('password').value
+    }, 'auth-result');
+    loadProducts();
+  </script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+__pycache__/
+.venv/
+app.db
+.pytest_cache/
+.coverage
+*.pyc
+mini-shop.tar.gz
+.ruff_cache/
